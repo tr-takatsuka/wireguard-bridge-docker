@@ -1,0 +1,53 @@
+
+name: wgserver
+
+networks:
+  net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+services:
+  wg:
+    container_name: wgserver-wg
+    image: linuxserver/wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Tokyo
+      - SERVERURL=example.com
+      - SERVERPORT=51820   # optional
+    entrypoint: ["/bin/sh", "-c", "/opt/entrypoint.sh && exec /init"]
+    volumes:
+      - ./wg/config:/opt/config/
+      - ./wg/entrypoint.sh:/opt/entrypoint.sh:ro
+      - ./wg/wg0.conf.template:/opt/wg0.conf.template:ro
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv4.conf.all.send_redirects=0
+      - net.ipv4.conf.default.send_redirects=0 
+    networks:
+      net:
+        ipv4_address: 172.20.1.101
+
+
+  sampleubuntu:
+    image: ubuntu:24.04
+    container_name: wgserver-sampleubuntu
+    cap_add:
+      - NET_ADMIN
+    command: >
+      bash -c "apt-get update && 
+               apt-get install -y iproute2 iputils-ping curl net-tools &&
+               ip route add 172.20.2.0/24 via 172.20.1.101 &&
+               tail -f /dev/null"
+    networks:
+      net:
+        ipv4_address: 172.20.1.102

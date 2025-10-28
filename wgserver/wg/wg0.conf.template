@@ -1,0 +1,12 @@
+[Interface]
+Address = 10.13.13.1/24
+ListenPort = ${GEN_SERVERPORT}
+PrivateKey = ${GEN_SERVER_PRIVATE}
+PostUp   = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT
+
+[Peer]
+PublicKey = ${GEN_CLIENT_PUBLIC}
+PresharedKey = ${GEN_PSK}
+AllowedIPs = 10.13.13.2/32, 172.20.2.0/24
+
